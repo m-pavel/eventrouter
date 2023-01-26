@@ -29,6 +29,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -107,7 +108,9 @@ func main() {
 	var wg sync.WaitGroup
 
 	clientset := loadConfig()
-	sharedInformers := informers.NewSharedInformerFactory(clientset, viper.GetDuration("resync-interval"))
+	//sharedInformers := informers.NewSharedInformerFactory(clientset, viper.GetDuration("resync-interval"))
+	sharedInformers := informers.NewFilteredSharedInformerFactory(clientset, viper.GetDuration("resync-interval"), viper.GetString("namespace"), func(*v1.ListOptions) {})
+
 	eventsInformer := sharedInformers.Core().V1().Events()
 
 	// TODO: Support locking for HA https://github.com/kubernetes/kubernetes/pull/42666
